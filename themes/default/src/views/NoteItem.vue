@@ -1,19 +1,48 @@
-<!-- eslint-disable vue/no-setup-props-destructure -->
 <script setup lang="ts" name="Note">
-import { ref, watch } from 'vue'
+import { ref, watch, nextTick, onUnmounted } from 'vue'
 import { marked } from 'marked'
-import { Note } from '@/utils';
+import { Note } from '@/utils'
+import { handleFormatKeydown } from '@/utils/format'
+import { t } from '@/locales'
+import { ElMessage } from 'element-plus'
 
 const props = defineProps<{
-  modelValue: Note;
+  modelValue: Note
+  lock?: boolean
 }>()
 
 const emit = defineEmits<{
-  'update:modelValue': [val: Note];
-  'remove': [];
+  'update:modelValue': [val: Note]
+  'remove': []
 }>()
 
 const data = ref<Note>(props.modelValue || new Note())
+const isEditing = ref(false)
+const editText = ref('')
+const textareaRef = ref<HTMLTextAreaElement | null>(null)
+const editBoxRef = ref<HTMLElement | null>(null)
+
+function handleGlobalClick(e: MouseEvent) {
+  if (!isEditing.value) return
+  const target = e.target as HTMLElement | null
+  if (editBoxRef.value && !editBoxRef.value.contains(target)) {
+    saveEdit()
+  }
+}
+
+watch(isEditing, (val) => {
+  if (val) {
+    setTimeout(() => {
+      window.addEventListener('mousedown', handleGlobalClick)
+    }, 0)
+  } else {
+    window.removeEventListener('mousedown', handleGlobalClick)
+  }
+})
+
+onUnmounted(() => {
+  window.removeEventListener('mousedown', handleGlobalClick)
+})
 
 watch(() => props.modelValue, (val) => {
   data.value = val
@@ -21,115 +50,210 @@ watch(() => props.modelValue, (val) => {
 
 watch(() => data.value, (val) => {
   emit('update:modelValue', val)
-})
-
-watch(() => data.value.finish, () => {
-  Note.update(data.value);
-})
+}, { deep: true })
 
 marked.use({
-  silent: true
-});
+  silent: true,
+  gfm: true,
+  breaks: true,
+})
 
-const newContent = ref('');
-function edit() {
-  newContent.value = data.value.content;
-  data.value.editable = true;
+function renderMarkdown(content: string) {
+  if (!content) return ''
+  const sanitized = content
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    .replace(/href\s*=\s*["']?javascript:[^"'>]*/gi, 'href="#"')
+  return marked(sanitized)
 }
 
-function update() {
-  data.value.content = newContent.value;
-  data.value.editable = false;
-  Note.update(data.value);
+function toggleFinish() {
+  if (props.lock || isEditing.value) return
+  data.value.finish = !data.value.finish
+  Note.update(data.value)
 }
 
-function cancel() {
-  data.value.editable = false;
-  newContent.value = '';
+function adjustTextareaHeight() {
+  if (textareaRef.value) {
+    textareaRef.value.style.height = 'auto'
+    textareaRef.value.style.height = `${textareaRef.value.scrollHeight}px`
+  }
 }
 
-function addTask() {
-  Note.makeTask(data.value);
+function startEdit() {
+  if (props.lock) return
+  editText.value = data.value.content
+  isEditing.value = true
+  nextTick(() => {
+    if (textareaRef.value) {
+      adjustTextareaHeight()
+      textareaRef.value.focus()
+      const len = textareaRef.value.value.length
+      textareaRef.value.setSelectionRange(len, len)
+    }
+  })
 }
 
+function saveEdit() {
+  const text = editText.value.trim()
+  if (text) {
+    data.value.content = text
+    Note.update(data.value)
+  }
+  isEditing.value = false
+}
+
+function cancelEdit() {
+  isEditing.value = false
+  editText.value = ''
+}
+
+function onEditKeydown(e: KeyboardEvent) {
+  if (handleFormatKeydown(e, textareaRef.value, editText.value, (val) => {
+    editText.value = val
+    nextTick(adjustTextareaHeight)
+  })) {
+    return
+  }
+
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault()
+    saveEdit()
+  } else if (e.key === 'Escape') {
+    cancelEdit()
+  } else {
+    nextTick(adjustTextareaHeight)
+  }
+}
+
+function exportToCalendar() {
+  Note.makeTask(data.value)
+  ElMessage({
+    message: 'Task Exported',
+    type: 'success',
+    duration: 2000,
+    offset: 36,
+  })
+}
 </script>
+
 <template>
-  <li 
-    class="relative m-2 cursor-pointer note-item"
+  <div
+    class="note-item-card group"
+    :class="{
+      'is-finished': data.finish,
+      'cursor-pointer': !props.lock && !isEditing,
+    }"
+    @click="toggleFinish"
   >
-  <div class="absolute w-full h-full border-2 border-current rounded"   :class="{ 
-       'opacity-50': data.finish,
-      'px-2 py-1': !data.editable
-    }"/>
-    <div @click="data.finish = !data.finish" v-if="!data.editable" class="border-inherit" :class="{ 
-      'px-2 py-1': !data.editable
-    }">
-      <span class="absolute top-0 left-2"  :class="{ 'opacity-50': data.finish}">
-        <el-checkbox @click.stop="" v-model="data.finish"> &nbsp; </el-checkbox>
-      </span>
-      <div :class="{ 'opacity-50': data.finish}">
-        <del class="markdown-body" v-if="data.finish" v-html="marked(data.content)"></del>
-        <span class="markdown-body" v-else  v-html="marked(data.content)"></span>
-      </div>
-    
-      <span 
-        class="absolute z-10 hidden text-xs toolbar right-2 bottom-[-15px]" 
-        style="background-color: var(--background-color); border-top-color: var(--background-color);"
+    <!-- 统一行内布局：复选框与把手恒定在原位，编辑与展示无缝切换零跳动 -->
+    <div class="flex items-start gap-1.5 min-w-0 flex-1 pr-12">
+      <!-- 极简拖拽把手（Notion/Linear 风格：位于复选框左侧，鼠标悬停时优雅淡入） -->
+      <button
+        v-if="!props.lock"
+        type="button"
+        class="drag-handle mt-0.5 w-3 h-3.5 flex items-center justify-center text-[var(--text-muted)] opacity-0 group-hover:opacity-60 hover:!opacity-100 transition-opacity cursor-grab active:cursor-grabbing shrink-0"
+        title="Drag to sort"
       >
-      <div class="absolute w-full h-full border-2 rounded-bl rounded-br pointer-events-none toolbar" style="border-top-color: var(--background-color);"  :class="{ 'opacity-50': data.finish}"/>
-      <div class="z-10 px-2 space-x-2">
-        <font-awesome-icon class="p-1 rounded-sm cursor-pointer hover:bg-white/25 drag-handle" v-if="!data.finish" :icon="['far', 'calendar']" @click.stop="addTask" />
-        <font-awesome-icon class="p-1 rounded-sm cursor-pointer hover:bg-white/25 drag-handle" :class="{ 'opacity-50': data.finish}" :icon="['fas', 'up-down-left-right']"/>
-        <font-awesome-icon class="p-1 rounded-sm cursor-pointer hover:bg-white/25" :class="{ 'opacity-50': data.finish}" :icon="['far', 'pen-to-square']" @click.stop="edit"/>
-        <font-awesome-icon class="p-1 rounded-sm cursor-pointer hover:bg-white/25" :class="{ 'opacity-50': data.finish}" :icon="['far', 'trash-can']" @click.stop="emit('remove')"/>
+        <i class="ri-drag-move-2-fill text-[11px]"></i>
+      </button>
+
+      <!-- 极简平铺复选框 -->
+      <button
+        type="button"
+        class="mt-0.5 w-3.5 h-3.5 rounded-full border flex items-center justify-center transition-all shrink-0"
+        :class="[
+          data.finish
+            ? 'bg-blue-500 border-blue-500 text-white'
+            : 'border-[var(--text-muted)] hover:border-blue-400 bg-transparent',
+          props.lock ? 'pointer-events-none' : 'cursor-pointer',
+        ]"
+        @mousedown.stop
+        @click.stop="toggleFinish"
+      >
+        <i
+          v-if="data.finish"
+          class="ri-check-line text-[10px]"
+        ></i>
+      </button>
+
+      <!-- Markdown 文本展示 / 原地直接修改（1:1 像素级字体与行距对齐，绝无跳动） -->
+      <div
+        class="flex-1 min-w-0 text-[13px] leading-relaxed break-words item-text"
+        :class="{ 'cursor-text': !props.lock && !isEditing }"
+        @mousedown.stop
+      >
+        <!-- 正常阅读状态 -->
+        <div
+          v-if="!isEditing"
+          class="markdown-body inline"
+          @click.stop="startEdit"
+          v-html="renderMarkdown(data.content || '')"
+        ></div>
+
+        <!-- 原地直接内联输入框（无多余边框与内边距，完全吻合文字物理位置） -->
+        <div v-else ref="editBoxRef" class="w-full">
+          <textarea
+            ref="textareaRef"
+            v-model="editText"
+            rows="1"
+            class="inline-edit-textarea"
+            :placeholder="t('titlePlaceholder')"
+            @input="adjustTextareaHeight"
+            @mousedown.stop
+            @keydown="onEditKeydown"
+            @blur="saveEdit"
+          />
+        </div>
       </div>
-      
-      </span>
     </div>
-    <template v-else>
-      <el-input 
-          type="textarea" 
-          :autosize="{
-            minRows: 1
-          }" 
-          class="w-full" 
-          @keydown.enter.ctrl.exact="update"
-          @keydown.esc="cancel"
-          v-model="newContent"
-        />
-        <el-button link class="absolute text-lg top-1 left-1" @click.stop="update">
-          <font-awesome-icon :icon="['fas', 'check']" />
-        </el-button>
-    </template>
-  </li>
+
+    <!-- 悬浮精简微操作栏（Hover 时淡入，仅保留导出与删除） -->
+    <div v-if="!props.lock && !isEditing" class="item-actions" @mousedown.stop @click.stop="">
+      <el-tooltip v-if="!data.finish" placement="top" content="Calendar" :show-after="300">
+        <button
+          type="button"
+          class="item-action-btn"
+          @mousedown.stop
+          @click="exportToCalendar"
+        >
+          <i class="ri-calendar-event-line"></i>
+        </button>
+      </el-tooltip>
+
+      <el-tooltip placement="top" :content="t('deleteItem')" :show-after="300">
+        <button
+          type="button"
+          class="item-action-btn danger"
+          @mousedown.stop
+          @click="emit('remove')"
+        >
+          <i class="ri-close-line"></i>
+        </button>
+      </el-tooltip>
+    </div>
+  </div>
 </template>
 
 <style lang="scss" scoped>
-.el-main {
-  padding: 0;
-}
-.el-textarea {
-  :deep(textarea) {
-    text-indent: 1.5em;
-  }
-}
-
 .markdown-body {
-  > :first-child {
-    text-indent: 24px;
+  background: transparent !important;
+  font-size: 13px !important;
+  color: inherit !important;
+
+  :deep(p) {
+    margin-bottom: 0 !important;
+    color: inherit !important;
+  }
+
+  :deep(a) {
+    color: var(--accent-color) !important;
+  }
+
+  :deep(code) {
+    background: var(--item-hover-bg) !important;
+    border-radius: 3px;
+    padding: 1px 3px;
+    font-size: 11.5px;
   }
 }
-
-.note-item {
-  border-color: var(--el-text-color-primary);
-  &:hover {
-    .toolbar {
-      display: inline-block;
-      border-color: inherit
-    }
-  }
-}
-
-
-
 </style>

@@ -1,3 +1,9 @@
+﻿// ------------------------------------------------------------------
+// Original Work Copyright (c) imlinhanchao
+// https://github.com/imlinhanchao/sticky_notes
+// Modified by EchoCreek (2026)
+// Licensed under the Apache License, Version 2.0
+// ------------------------------------------------------------------
 #include "StdAfx.h"
 #include "Utility.h"
 #pragma comment(lib, "version")
@@ -110,12 +116,12 @@ void Utility::SetAutoRun(bool bAuto)
 
 HANDLE Utility::ProgramLock(CString sInstanceName)
 {
-	HANDLE hInstance = CreateMutex(NULL, TRUE, _T("GRAPHICS ENGINE_INSTANCE"));
-	if (ERROR_ALREADY_EXISTS == GetLastError())
+	if (sInstanceName.IsEmpty()) sInstanceName = _T("STICKY_NOTES_APP_MUTEX_SINGLETON");
+	HANDLE hInstance = CreateMutex(NULL, TRUE, sInstanceName.GetString());
+	if (GetLastError() == ERROR_ALREADY_EXISTS)
 	{
 		CloseHandle(hInstance);
-		hInstance = nullptr;
-		::PostQuitMessage(0);
+		return nullptr;
 	}
 	return hInstance;
 }

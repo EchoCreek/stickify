@@ -1,0 +1,45 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# Windows C++ / Visual Studio files (Must be CRLF)
+*.sln text eol=crlf
+*.vcxproj text eol=crlf
+*.vcxproj.filters text eol=crlf
+*.rc text eol=crlf
+*.iss text eol=crlf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+*.manifest text eol=crlf
+
+# C++ Source and Header files
+*.cpp text eol=crlf
+*.h text eol=crlf
+*.c text eol=crlf
+*.def text eol=crlf
+
+# Web & Frontend files (LF normalized)
+*.ts text eol=lf
+*.js text eol=lf
+*.vue text eol=lf
+*.json text eol=lf
+*.html text eol=lf
+*.css text eol=lf
+*.scss text eol=lf
+*.md text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+
+# Binary files
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.cur binary
+*.exe binary
+*.dll binary
+*.lib binary
+*.db binary
+*.pdf binary
+*.zip binary

@@ -1,43 +1,90 @@
 <script setup lang="ts" name="Home">
-import { computed, onMounted, ref } from 'vue'
-import draggable from 'vuedraggable';
+import { computed, onMounted, ref, nextTick } from 'vue'
+import draggable from 'vuedraggable'
 import NoteItem from './NoteItem.vue'
-import { Note, App } from '@/utils';
+import { Note, App } from '@/utils'
+import { handleFormatKeydown } from '@/utils/format'
+import { t } from '@/locales'
+import { ElMessage } from 'element-plus'
+
+const lock = ref(false)
+const dataList = ref<Note[]>([])
+const content = ref('')
+const textareaRef = ref<HTMLTextAreaElement | null>(null)
 
 onMounted(() => {
   App.on('data', (data) => {
-    dataList.value = data
+    dataList.value = (data || []).map((it: any) => ({
+      id: it.id,
+      content: it.content,
+      finish: it.finish ?? it.finished ?? false,
+      editable: it.editable,
+    }))
+  })
+  App.on('lock', (data) => {
+    lock.value = data
   })
   App.init()
 })
 
-const dataList = ref<Note[]>([])
-
-// 将 finish 排在后面
+// 将 finish 排序在后
 const sortData = computed(() => {
   const sortd = [...dataList.value]
   return sortd.sort((a, b) => {
-    if (a.finish && !b.finish) {
-      return 1
-    }
-    if (!a.finish && b.finish) {
-      return -1
-    }
+    if (a.finish && !b.finish) return 1
+    if (!a.finish && b.finish) return -1
     return 0
   })
 })
 
-const content = ref('')
+const pendingCount = computed(() => dataList.value.filter((i) => !i.finish).length)
+
+function adjustTextareaHeight() {
+  if (textareaRef.value) {
+    textareaRef.value.style.height = 'auto'
+    textareaRef.value.style.height = `${textareaRef.value.scrollHeight}px`
+  }
+}
+
 function add() {
-  if (!content.value) return
-  const data = new Note(content.value)
+  const text = content.value.trim()
+  if (!text) return
+  const data = new Note(text)
   dataList.value.unshift(data)
   content.value = ''
+  if (textareaRef.value) {
+    textareaRef.value.style.height = 'auto'
+  }
   Note.add(data)
 }
 
+function onKeydown(e: KeyboardEvent) {
+  if (handleFormatKeydown(e, textareaRef.value, content.value, (val) => {
+    content.value = val
+    nextTick(adjustTextareaHeight)
+  })) {
+    return
+  }
+
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault()
+    add()
+  } else if (e.key === 'Escape') {
+    (e.target as HTMLElement)?.blur?.()
+  } else {
+    nextTick(adjustTextareaHeight)
+  }
+}
+
+function onMainMouseDown(e: MouseEvent) {
+  const target = e.target as HTMLElement | null
+  if (target && !target.closest('.quick-add-box') && !target.closest('.note-item-card')) {
+    (document.activeElement as HTMLElement)?.blur?.()
+  }
+}
+
 function remove(item: Note) {
-  const index = dataList.value.findIndex((a) => a.id == item.id)
+  const index = dataList.value.findIndex((a) => a.id === item.id)
   if (index > -1) {
     dataList.value.splice(index, 1)
     Note.remove(item)
@@ -48,95 +95,108 @@ function hide() {
   App.hide()
 }
 
-function clear() {
-  Note.clear()
+function clearFinished() {
+  const finishedItems = dataList.value.filter((i) => i.finish)
+  if (finishedItems.length === 0) {
+    ElMessage({
+      message: t('noFinished'),
+      type: 'info',
+      duration: 1500,
+      offset: 36,
+    })
+    return
+  }
+  dataList.value = dataList.value.filter((i) => !i.finish)
+  Note.updateAll(dataList.value)
+  ElMessage({
+    message: t('cleanedFinished', { n: finishedItems.length }),
+    type: 'success',
+    duration: 1500,
+    offset: 36,
+  })
 }
 
 function onSort({ moved }: any) {
-  let { oldIndex, newIndex } = moved;
-  oldIndex = dataList.value.findIndex((a) => a.id == sortData.value[oldIndex].id);
-  newIndex = dataList.value.findIndex((a) => a.id == sortData.value[newIndex].id);
-  const data = dataList.value[oldIndex];
-  dataList.value.splice(oldIndex, 1);
-  dataList.value.splice(newIndex, 0, data);
+  let { oldIndex, newIndex } = moved
+  oldIndex = dataList.value.findIndex((a) => a.id === sortData.value[oldIndex].id)
+  newIndex = dataList.value.findIndex((a) => a.id === sortData.value[newIndex].id)
+  const data = dataList.value[oldIndex]
+  dataList.value.splice(oldIndex, 1)
+  dataList.value.splice(newIndex, 0, data)
   Note.updateAll(dataList.value)
 }
 </script>
 
 <template>
-  <el-main class="h-full">
-    <ul>
-      <li class="m-2 rounded border-2 cursor-pointer relative border-current">
-        <el-input
-          type="textarea"
-          :autosize="{
-            minRows: 1
-          }"
-          class="w-full"
-          @keydown.enter.ctrl.exact="add"
-          v-model="content"
-        />
-        <el-button @click="add" link class="absolute top-1 left-1 text-lg">
-          <font-awesome-icon :icon="['fas', 'plus']" />
-        </el-button>
-      </li>
-    </ul>
-    <draggable 
-      class="my-2"
-      :model-value="sortData"
-      group="note"
-      handle=".drag-handle"
-      tag="ul"
-      itemKey="id"
-      animation="20"
-      ghostClass="drag-ghost"
-      @change="onSort"
-    >
-      <template #item="{ element: row }">
-        <NoteItem
-          :model-value="row"
-          @update:model-value="(d: Note) => (dataList[dataList.findIndex((a) => d.id == a.id)] = d)"
-          @remove="remove(row)"
-        />
-      </template>
-    </draggable>
-  </el-main>
-  <el-footer class="flex mr-3 items-center justify-end space-x-3">
-    <span>
-      <el-tooltip content="隐藏便签(可通过 Show All 菜单重新显示)" placement="top">
-        <el-button link size="small" class="w-full" type="primary" @click="hide">
-          <font-awesome-icon :icon="['fas', 'eye-slash']" />
-        </el-button>
+  <main class="flex-1 flex flex-col min-h-0 overflow-hidden" @mousedown="onMainMouseDown">
+    <!-- 事项列表区（支持拖拽排序，顶部无位移对齐） -->
+    <div class="flex-1 overflow-y-auto px-0 py-0">
+      <draggable
+        :model-value="sortData"
+        group="note"
+        handle=".drag-handle"
+        tag="div"
+        itemKey="id"
+        animation="150"
+        ghostClass="drag-ghost"
+        @change="onSort"
+      >
+        <template #item="{ element: row }">
+          <NoteItem
+            :model-value="row"
+            :lock="lock"
+            @update:model-value="(d: Note) => (dataList[dataList.findIndex((a) => d.id === a.id)] = d)"
+            @remove="remove(row)"
+          />
+        </template>
+      </draggable>
+
+      <!-- 空状态提示 -->
+      <div
+        v-if="dataList.length === 0 && !lock"
+        class="flex flex-col items-center justify-center py-8 text-gray-500 text-xs select-none opacity-50"
+      >
+        <i class="ri-sticky-note-line text-2xl mb-1.5"></i>
+        <span>{{ t('empty') }}</span>
+      </div>
+    </div>
+
+    <!-- 底部快捷添加框（非穿透模式显示，置于列表下方保证事项自顶向下零位移） -->
+    <div v-if="!lock" class="quick-add-box" @mousedown.stop>
+      <textarea
+        ref="textareaRef"
+        rows="1"
+        v-model="content"
+        :placeholder="t('addPlaceholder')"
+        @input="adjustTextareaHeight"
+        @keydown="onKeydown"
+        @mousedown.stop
+      />
+      <el-tooltip placement="top" :content="t('addBtn')" :show-after="300">
+        <button class="add-btn" @click="add" @mousedown.stop>
+          <i class="ri-add-line text-sm"></i>
+        </button>
       </el-tooltip>
-    </span>
-    <el-popconfirm title="删除后将无法找回，是否确认完全删除?" @confirm="clear">
-      <template #reference>
-        <span>
-          <el-tooltip content="删除便签" placement="top">
-            <el-button link size="small"  class="w-full" type="danger">
-              <font-awesome-icon :icon="['fas', 'trash']" />
-            </el-button>
-          </el-tooltip>
-        </span>
-      </template>
-    </el-popconfirm>
-  </el-footer>
+    </div>
+
+    <!-- 底部状态栏（非穿透模式显示：清理已完成条目） -->
+    <footer
+      v-if="!lock && dataList.length > 0"
+      class="px-2.5 py-1 flex items-center justify-between border-t border-[var(--card-border)] select-none text-[11px]"
+    >
+      <span class="text-[var(--text-muted)]">
+        {{ pendingCount > 0 ? t('pending', { n: pendingCount }) : t('allDone') }}
+      </span>
+
+      <el-tooltip placement="top" :content="t('clearFinished')" :show-after="300">
+        <button
+          class="clear-btn text-[10px] text-gray-500 hover:text-blue-500 active:text-blue-600 transition-colors px-1 py-0.5 rounded cursor-pointer select-none"
+          @mousedown.stop
+          @click.stop="clearFinished"
+        >
+          {{ t('clearFinished') }}
+        </button>
+      </el-tooltip>
+    </footer>
+  </main>
 </template>
-
-<style lang="scss" scoped>
-.el-main,
-.el-footer {
-  padding: 0;
-}
-.el-textarea {
-  :deep(textarea) {
-    text-indent: 1.5em;
-  }
-}
-
-.markdown-body {
-  > :first-child {
-    text-indent: 24px;
-  }
-}
-</style>

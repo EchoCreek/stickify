@@ -1,6 +1,6 @@
 {
   "name": "notes",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev": "vite",
@@ -24,6 +24,7 @@
     "element-plus": "^2.3.5",
     "marked": "^5.0.4",
     "pinia": "^2.0.36",
+    "remixicon": "^4.9.1",
     "sass": "^1.62.1",
     "scss-loader": "^0.0.1",
     "terser": "^5.17.7",

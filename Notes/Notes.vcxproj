@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="DebugHttp|Win32">
@@ -129,6 +129,8 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -151,6 +153,8 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -172,7 +176,9 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;%(PreprocessorDefinitions);_DEBUG_HTTP</PreprocessorDefinitions>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>Default</LanguageStandard>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -195,7 +201,9 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;%(PreprocessorDefinitions);_DEBUG_HTTP</PreprocessorDefinitions>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>Default</LanguageStandard>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -219,6 +227,8 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -245,6 +255,8 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -269,15 +281,27 @@
     <None Include="res\Notes.rc2" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="app\AppCtrl.h" />
-    <ClInclude Include="app\Config.h" />
-    <ClInclude Include="app\Note.h" />
-    <ClInclude Include="app\NoteConfig.h" />
     <ClInclude Include="control\HotKeyEdit.h" />
-    <ClInclude Include="defintion.h" />
-    <ClInclude Include="NoteDlg.h" />
+    <ClInclude Include="core\domain\AppSetting.h" />
+    <ClInclude Include="core\domain\Note.h" />
+    <ClInclude Include="core\domain\NoteItem.h" />
+    <ClInclude Include="core\ports\INoteRepository.h" />
+    <ClInclude Include="core\services\NoteService.h" />
+    <ClInclude Include="core\services\NoteEventBus.h" />
+    <ClInclude Include="host\MainControlPanel.h" />
+    <ClInclude Include="host\NoteHostProtocol.h" />
+    <ClInclude Include="host\NoteHostWindow.h" />
+    <ClInclude Include="host\NoteManager.h" />
+    <ClInclude Include="host\NoteManagerProtocol.h" />
+    <ClInclude Include="host\NoteManagerWindow.h" />
+    <ClInclude Include="host\WebMessageDispatcher.h" />
+    <ClInclude Include="host\WebViewEnvironmentManager.h" />
+    <ClInclude Include="infra\AppSettingStore.h" />
+    <ClInclude Include="infra\DataMigrator.h" />
+    <ClInclude Include="infra\JsonNoteRepository.h" />
+    <ClInclude Include="infra\SqliteMigrator.h" />
+    <ClInclude Include="infra\SqliteNoteRepository.h" />
     <ClInclude Include="Notes.h" />
-    <ClInclude Include="NotesDlg.h" />
     <ClInclude Include="ref\Cvt.h" />
     <ClInclude Include="ref\HotKey.h" />
     <ClInclude Include="ref\Ini.h" />
@@ -286,6 +310,8 @@
     <ClInclude Include="ref\RawInput.h" />
     <ClInclude Include="ref\Registry.h" />
     <ClInclude Include="ref\Shell.h" />
+    <ClInclude Include="ref\sqlite\sqlite3.h" />
+    <ClInclude Include="ref\sqlite\sqlite3ext.h" />
     <ClInclude Include="ref\Utility.h" />
     <ClInclude Include="ref\XFile.h" />
     <ClInclude Include="Resource.h" />
@@ -293,14 +319,26 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="app\AppCtrl.cpp" />
-    <ClCompile Include="app\Config.cpp" />
-    <ClCompile Include="app\Note.cpp" />
-    <ClCompile Include="app\NoteConfig.cpp" />
     <ClCompile Include="control\HotKeyEdit.cpp" />
-    <ClCompile Include="NoteDlg.cpp" />
+    <ClCompile Include="core\domain\AppSetting.cpp" />
+    <ClCompile Include="core\domain\Note.cpp" />
+    <ClCompile Include="core\domain\NoteItem.cpp" />
+    <ClCompile Include="core\services\NoteService.cpp" />
+    <ClCompile Include="host\MainControlPanel.cpp" />
+    <ClCompile Include="host\NoteHostProtocol.cpp" />
+    <ClCompile Include="host\NoteHostWindow.cpp" />
+    <ClCompile Include="host\NoteManager.cpp" />
+    <ClCompile Include="host\NoteManagerProtocol.cpp" />
+    <ClCompile Include="host\NoteDto.cpp" />
+    <ClCompile Include="host\NoteManagerWindow.cpp" />
+    <ClCompile Include="host\WebMessageDispatcher.cpp" />
+    <ClCompile Include="host\WebViewEnvironmentManager.cpp" />
+    <ClCompile Include="infra\AppSettingStore.cpp" />
+    <ClCompile Include="infra\DataMigrator.cpp" />
+    <ClCompile Include="infra\JsonNoteRepository.cpp" />
+    <ClCompile Include="infra\SqliteMigrator.cpp" />
+    <ClCompile Include="infra\SqliteNoteRepository.cpp" />
     <ClCompile Include="Notes.cpp" />
-    <ClCompile Include="NotesDlg.cpp" />
     <ClCompile Include="ref\Cvt.cpp" />
     <ClCompile Include="ref\HotKey.cpp" />
     <ClCompile Include="ref\Ini.cpp" />
@@ -309,6 +347,14 @@
     <ClCompile Include="ref\RawInput.cpp" />
     <ClCompile Include="ref\Registry.cpp" />
     <ClCompile Include="ref\Shell.cpp" />
+    <ClCompile Include="ref\sqlite\sqlite3.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='DebugHttp|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='DebugHttp|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="ref\Utility.cpp" />
     <ClCompile Include="ref\XFile.cpp" />
     <ClCompile Include="stdafx.cpp">
@@ -341,5 +387,38 @@
     <Error Condition="!Exists('..\packages\Microsoft.Web.WebView2.1.0.1774.30\build\native\Microsoft.Web.WebView2.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Web.WebView2.1.0.1774.30\build\native\Microsoft.Web.WebView2.targets'))" />
     <Error Condition="!Exists('..\packages\Microsoft.Windows.ImplementationLibrary.1.0.230411.1\build\native\Microsoft.Windows.ImplementationLibrary.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Windows.ImplementationLibrary.1.0.230411.1\build\native\Microsoft.Windows.ImplementationLibrary.targets'))" />
     <Error Condition="!Exists('..\packages\rapidjson.1.0.2\build\native\rapidjson.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\rapidjson.1.0.2\build\native\rapidjson.targets'))" />
+  </Target>
+  <Target Name="DeployThemesToOutput" AfterTargets="Build">
+    <ItemGroup>
+      <DefaultThemeDistFiles Include="$(ProjectDir)..\themes\default\dist\**\*.*" />
+      <SimpleThemeDistFiles Include="$(ProjectDir)..\themes\simple\dist\**\*.*" />
+      <ManagerThemeDistFiles Include="$(ProjectDir)..\themes\manager\dist\**\*.*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(DefaultThemeDistFiles)"
+          DestinationFiles="@(DefaultThemeDistFiles->'$(OutDir)themes\Default\%(RecursiveDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(SimpleThemeDistFiles)"
+          DestinationFiles="@(SimpleThemeDistFiles->'$(OutDir)themes\Simple\%(RecursiveDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(ManagerThemeDistFiles)"
+          DestinationFiles="@(ManagerThemeDistFiles->'$(OutDir)themes\Manager\%(RecursiveDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(DefaultThemeDistFiles)"
+          DestinationFiles="@(DefaultThemeDistFiles->'$(ProjectDir)..\x64\$(Configuration)\themes\Default\%(RecursiveDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(SimpleThemeDistFiles)"
+          DestinationFiles="@(SimpleThemeDistFiles->'$(ProjectDir)..\x64\$(Configuration)\themes\Simple\%(RecursiveDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(ManagerThemeDistFiles)"
+          DestinationFiles="@(ManagerThemeDistFiles->'$(ProjectDir)..\x64\$(Configuration)\themes\Manager\%(RecursiveDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="true" />
+  </Target>
+  <Target Name="SyncToWorkspaceOutput" AfterTargets="Build">
+    <ItemGroup>
+      <SyncFiles Include="$(TargetDir)Notes.exe;$(TargetDir)Notes.pdb" Condition="Exists('$(TargetDir)Notes.exe')" />
+    </ItemGroup>
+    <Copy SourceFiles="@(SyncFiles)"
+          DestinationFolder="$(ProjectDir)..\x64\$(Configuration)\"
+          SkipUnchangedFiles="true" />
   </Target>
 </Project>

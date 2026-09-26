@@ -1,4 +1,10 @@
 
+// ------------------------------------------------------------------
+// Original Work Copyright (c) imlinhanchao
+// https://github.com/imlinhanchao/sticky_notes
+// Modified by Sticky Notes Refactoring Team (2026): Streamlined includes for hexagonal architecture
+// Licensed under the Apache License, Version 2.0
+// ------------------------------------------------------------------
 // stdafx.h : include file for standard system include files,
 // or project specific include files that are used frequently,
 // but are changed infrequently
@@ -90,8 +96,10 @@ using namespace Easy;
 
 #include "control/HotKeyEdit.h"
 
-#include "defintion.h"
-#include "app/Config.h"
-#include "app/NoteConfig.h"
-#include "app/Note.h"
-#include "app/AppCtrl.h"
+#include "core/domain/NoteItem.h"
+#include "core/domain/Note.h"
+#include "core/domain/AppSetting.h"
+#include "core/ports/INoteRepository.h"
+#include "infra/JsonNoteRepository.h"
+#include "core/services/NoteService.h"
+

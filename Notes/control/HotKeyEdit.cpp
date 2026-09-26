@@ -1,3 +1,9 @@
+﻿// ------------------------------------------------------------------
+// Original Work Copyright (c) imlinhanchao
+// https://github.com/imlinhanchao/sticky_notes
+// Modified by EchoCreek (2026)
+// Licensed under the Apache License, Version 2.0
+// ------------------------------------------------------------------
 #include "StdAfx.h"
 #include "HotKeyEdit.h"
 

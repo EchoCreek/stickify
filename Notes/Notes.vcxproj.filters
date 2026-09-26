@@ -1,17 +1,14 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="ref">
       <UniqueIdentifier>{74aaf450-03cb-42a5-82f0-fbde78bd91ae}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ref\sqlite">
+      <UniqueIdentifier>{81b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5e}</UniqueIdentifier>
+    </Filter>
     <Filter Include="control">
       <UniqueIdentifier>{6fba9fe0-0c76-4151-ad7d-412262673399}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="app">
-      <UniqueIdentifier>{75aa9ffb-0359-4d37-80f4-d7c295aa7da9}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="view">
-      <UniqueIdentifier>{4bd0cef8-18b3-472c-a0be-e5ef5cdea348}</UniqueIdentifier>
     </Filter>
     <Filter Include="src">
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
@@ -24,6 +21,21 @@
     <Filter Include="res">
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="core">
+      <UniqueIdentifier>{a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="core\domain">
+      <UniqueIdentifier>{b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="core\ports">
+      <UniqueIdentifier>{c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="infra">
+      <UniqueIdentifier>{d4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="host">
+      <UniqueIdentifier>{e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -79,29 +91,62 @@
     <ClInclude Include="control\HotKeyEdit.h">
       <Filter>control</Filter>
     </ClInclude>
-    <ClInclude Include="app\Config.h">
-      <Filter>app</Filter>
-    </ClInclude>
-    <ClInclude Include="NoteDlg.h">
-      <Filter>view</Filter>
-    </ClInclude>
-    <ClInclude Include="NotesDlg.h">
-      <Filter>view</Filter>
-    </ClInclude>
-    <ClInclude Include="defintion.h">
-      <Filter>header</Filter>
-    </ClInclude>
-    <ClInclude Include="app\AppCtrl.h">
-      <Filter>header</Filter>
-    </ClInclude>
-    <ClInclude Include="app\Note.h">
-      <Filter>header</Filter>
-    </ClInclude>
     <ClInclude Include="ref\XFile.h">
       <Filter>ref</Filter>
     </ClInclude>
-    <ClInclude Include="app\NoteConfig.h">
-      <Filter>app</Filter>
+    <ClInclude Include="core\domain\NoteItem.h">
+      <Filter>core\domain</Filter>
+    </ClInclude>
+    <ClInclude Include="core\domain\Note.h">
+      <Filter>core\domain</Filter>
+    </ClInclude>
+    <ClInclude Include="core\domain\AppSetting.h">
+      <Filter>core\domain</Filter>
+    </ClInclude>
+    <ClInclude Include="core\ports\INoteRepository.h">
+      <Filter>core\ports</Filter>
+    </ClInclude>
+    <ClInclude Include="core\services\NoteService.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="infra\AppSettingStore.h">
+      <Filter>infra</Filter>
+    </ClInclude>
+    <ClInclude Include="infra\DataMigrator.h">
+      <Filter>infra</Filter>
+    </ClInclude>
+    <ClInclude Include="infra\JsonNoteRepository.h">
+      <Filter>infra</Filter>
+    </ClInclude>
+    <ClInclude Include="infra\SqliteNoteRepository.h">
+      <Filter>infra</Filter>
+    </ClInclude>
+    <ClInclude Include="infra\SqliteMigrator.h">
+      <Filter>infra</Filter>
+    </ClInclude>
+    <ClInclude Include="ref\sqlite\sqlite3.h">
+      <Filter>ref\sqlite</Filter>
+    </ClInclude>
+    <ClInclude Include="ref\sqlite\sqlite3ext.h">
+      <Filter>ref\sqlite</Filter>
+    </ClInclude>
+    <ClInclude Include="host\MainControlPanel.h">
+      <Filter>host</Filter>
+    </ClInclude>
+    <ClInclude Include="host\NoteManager.h">
+      <Filter>host</Filter>
+    </ClInclude>
+    <ClInclude Include="host\WebMessageDispatcher.h">
+      <Filter>host</Filter>
+    </ClInclude>
+    <ClInclude Include="host\NoteHostWindow.h">
+      <Filter>host</Filter>
+    </ClInclude>
+    <ClInclude Include="host\NoteManagerWindow.h">
+      <Filter>host</Filter>
+    </ClInclude>
+    <ClInclude Include="host\WebViewEnvironmentManager.h">
+      <Filter>host</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -110,6 +155,54 @@
     </ClCompile>
     <ClCompile Include="stdafx.cpp">
       <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="core\domain\NoteItem.cpp">
+      <Filter>core\domain</Filter>
+    </ClCompile>
+    <ClCompile Include="core\domain\Note.cpp">
+      <Filter>core\domain</Filter>
+    </ClCompile>
+    <ClCompile Include="core\domain\AppSetting.cpp">
+      <Filter>core\domain</Filter>
+    </ClCompile>
+    <ClCompile Include="core\services\NoteService.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="infra\AppSettingStore.cpp">
+      <Filter>infra</Filter>
+    </ClCompile>
+    <ClCompile Include="infra\DataMigrator.cpp">
+      <Filter>infra</Filter>
+    </ClCompile>
+    <ClCompile Include="infra\JsonNoteRepository.cpp">
+      <Filter>infra</Filter>
+    </ClCompile>
+    <ClCompile Include="infra\SqliteNoteRepository.cpp">
+      <Filter>infra</Filter>
+    </ClCompile>
+    <ClCompile Include="infra\SqliteMigrator.cpp">
+      <Filter>infra</Filter>
+    </ClCompile>
+    <ClCompile Include="ref\sqlite\sqlite3.c">
+      <Filter>ref\sqlite</Filter>
+    </ClCompile>
+    <ClCompile Include="host\MainControlPanel.cpp">
+      <Filter>host</Filter>
+    </ClCompile>
+    <ClCompile Include="host\NoteManager.cpp">
+      <Filter>host</Filter>
+    </ClCompile>
+    <ClCompile Include="host\WebMessageDispatcher.cpp">
+      <Filter>host</Filter>
+    </ClCompile>
+    <ClCompile Include="host\NoteHostWindow.cpp">
+      <Filter>host</Filter>
+    </ClCompile>
+    <ClCompile Include="host\NoteManagerWindow.cpp">
+      <Filter>host</Filter>
+    </ClCompile>
+    <ClCompile Include="host\WebViewEnvironmentManager.cpp">
+      <Filter>host</Filter>
     </ClCompile>
     <ClCompile Include="ref\Cvt.cpp">
       <Filter>ref</Filter>
@@ -141,26 +234,8 @@
     <ClCompile Include="control\HotKeyEdit.cpp">
       <Filter>control</Filter>
     </ClCompile>
-    <ClCompile Include="NotesDlg.cpp">
-      <Filter>view</Filter>
-    </ClCompile>
-    <ClCompile Include="NoteDlg.cpp">
-      <Filter>view</Filter>
-    </ClCompile>
-    <ClCompile Include="app\Config.cpp">
-      <Filter>app</Filter>
-    </ClCompile>
-    <ClCompile Include="app\AppCtrl.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="app\Note.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="ref\XFile.cpp">
       <Filter>ref</Filter>
-    </ClCompile>
-    <ClCompile Include="app\NoteConfig.cpp">
-      <Filter>app</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

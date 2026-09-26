@@ -1,3 +1,9 @@
+﻿// ------------------------------------------------------------------
+// Original Work Copyright (c) imlinhanchao
+// https://github.com/imlinhanchao/sticky_notes
+// Modified by [Refactor] (2026): P0 - UTF-8 encoding, warning cleanup.
+// Licensed under the Apache License, Version 2.0
+// ------------------------------------------------------------------
 #include "stdafx.h"
 #include "Path.h"
 #include <Shlwapi.h>
@@ -209,9 +215,8 @@ CString Path::Folder( HWND hWnd, CString sRootPath/*=_T("")*/ )
 	if (sRootPath.IsEmpty()) sRootPath = GetDesktopDirectory();
 
 	TCHAR szBuffer[MAX_PATH];  
-	ZeroMemory(szBuffer, MAX_PATH);  
-	_tcscpy(szBuffer, sRootPath.GetBuffer());
-	sRootPath.ReleaseBuffer();
+	ZeroMemory(szBuffer, sizeof(szBuffer));  
+	_tcscpy_s(szBuffer, _countof(szBuffer), sRootPath.GetString());
 
 	BROWSEINFO bi; 
 	bi.hwndOwner      = hWnd;  
@@ -247,10 +252,8 @@ int Path::CopyTo( vector<CString> lstSrc, CString sDst )
 
 	ZeroMemory(pFrom, sizeof(TCHAR) * (nSrcSize));
 	ZeroMemory(pTo, sizeof(TCHAR) * (nDstSize));
-	_tcscpy(pFrom, sSrc.GetBuffer());
-	_tcscpy(pTo, sDst.GetBuffer());
-	sSrc.ReleaseBuffer();
-	sDst.ReleaseBuffer();
+	_tcscpy_s(pFrom, nSrcSize, sSrc.GetString());
+	_tcscpy_s(pTo, nDstSize, sDst.GetString());
 
 	for (int i = 0; i < nSrcSize; i++)
 	{

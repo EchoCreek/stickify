@@ -1,5 +1,4 @@
 import { fileURLToPath, URL } from 'node:url'
-import legacy from '@vitejs/plugin-legacy'
 
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
@@ -8,10 +7,13 @@ import vue from '@vitejs/plugin-vue'
 export default defineConfig({
   base: './',
   plugins: [
-    legacy({
-      targets: ['defaults', 'not IE 11']
-    }),
-    vue()
+    vue(),
+    {
+      name: 'html-transform',
+      transformIndexHtml(html) {
+        return html.replace(/ crossorigin(=("[^"]*"|'[^']*'|[^>\s]+))?/g, '');
+      }
+    }
   ],
   resolve: {
     alias: {
@@ -19,6 +21,11 @@ export default defineConfig({
     }
   },
   build: {
-    minify: 'terser'
+    chunkSizeWarningLimit: 3000
+  },
+  esbuild: {
+    // Strip all console.* calls and debugger statements from production builds
+    drop: ['console', 'debugger']
   }
 })
+

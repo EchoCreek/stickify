@@ -1,3 +1,9 @@
+// ------------------------------------------------------------------
+// Original Work Copyright (c) imlinhanchao
+// https://github.com/imlinhanchao/sticky_notes
+// Modified by [Refactor] (2026): P0 - UTF-8 encoding, warning cleanup.
+// Licensed under the Apache License, Version 2.0
+// ------------------------------------------------------------------
 #include "StdAfx.h"
 #include "Cvt.h"
 
@@ -60,6 +66,14 @@ CString Cvt::ToString(DWORD dwValue)
 	return sValue;
 }
 
+CString Cvt::ToString(uint64_t nValue)
+{
+	CString sValue = _T("");
+	sValue.Format(_T("%llu"), nValue);
+
+	return sValue;
+}
+
 CString Cvt::ToString(UINT nValue)
 {
 	CString sValue = _T("");
@@ -81,12 +95,12 @@ CString Cvt::ToString( const TCHAR* pszFormat, ... )
 {
 	ASSERT(pszFormat && *pszFormat);
 
-	TCHAR  szMsg[1024];	
+	TCHAR  szMsg[1024] = { 0 };	
 	va_list  vargs;
 
 	va_start(vargs, pszFormat);
-
-	_vsnwprintf_s( szMsg, sizeof(szMsg) - 1, pszFormat, vargs);
+	_vsntprintf_s(szMsg, _countof(szMsg), _TRUNCATE, pszFormat, vargs);
+	va_end(vargs);
 
 	return CString(szMsg);
 }
@@ -134,7 +148,7 @@ COLORREF Cvt::ToColor(CString sHex)
 	}
 
 	int nR = 0, nG = 0, nB = 0;
-	_stscanf(sHex, _T("#%2X%2X%2X"), &nR, &nG, &nB);
+	_stscanf_s(sHex, _T("#%2X%2X%2X"), &nR, &nG, &nB);
 	return RGB(nR, nG, nB);
 }
 

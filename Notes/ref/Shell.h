@@ -1,3 +1,9 @@
+﻿// ------------------------------------------------------------------
+// Original Work Copyright (c) imlinhanchao
+// https://github.com/imlinhanchao/sticky_notes
+// Modified by [Refactor] (2026): P0 - UTF-8 encoding, warning cleanup.
+// Licensed under the Apache License, Version 2.0
+// ------------------------------------------------------------------
 #pragma once
 
 namespace Easy {
@@ -8,7 +14,7 @@ public:
 	Shell(void);
 	~Shell(void);
 
-	typedef enum SHELL_TYPE { CONSOLE = 0, APP };
+	enum SHELL_TYPE { CONSOLE = 0, APP };
 
 	/*!
 	 * @brief Execute 

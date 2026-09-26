@@ -1,0 +1,49 @@
+Stickify (Desktop Sticky Notes & Manager) - Version 1.0.0
+https://github.com/EchoCreek/sticky_notes
+
+======================================================================
+Original Work Attribution:
+======================================================================
+Sticky Notes
+Copyright 2021-2026 imlinhanchao
+https://github.com/imlinhanchao/sticky_notes
+
+This product includes software originally developed by imlinhanchao (https://github.com/imlinhanchao).
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+======================================================================
+Derivative Work & Major Architectural Refactoring:
+======================================================================
+Stickify
+Copyright (c) 2026 EchoCreek & Stickify Contributors
+Licensed under the Apache License, Version 2.0
+
+Modifications and enhancements:
+1. Re-architected project from MFC God Object to Hexagonal Architecture (Ports & Adapters).
+2. Decoupled core business domain (Note, NoteItem, AppSetting) into pure POCO models from Win32 and MFC dependencies.
+3. Implemented high-performance SQLite Repository (SqliteNoteRepository) with WAL mode, composite covering indexes, 2-query batch loading, PreparedStatement caching pool, and incremental vacuum compaction.
+4. Implemented full lifecycle states: Recycle Bin (soft delete, restore, clear) and Archive Box (archive, unarchive).
+5. Modernized UI with Microsoft Edge WebView2 and Vue 3 + Pinia state management layer with native CSS virtualization.
+6. Implemented strong-typed bidirectional IPC contracts across C++ and TypeScript.
+
+----------------------------------------------------------------------
+Third-Party Software Acknowledgments:
+
+1. SQLite (https://www.sqlite.org/)
+   Dedicated to the public domain.
+
+2. RapidJSON (https://github.com/Tencent/rapidjson)
+   Copyright (C) 2015 THL A29 Limited, a Tencent company, and Milo Yip.
+   Licensed under the MIT License.
+
+3. Microsoft.Web.WebView2
+   Copyright (C) Microsoft Corporation. All rights reserved.
+   Licensed under the Microsoft Software License.
+
+4. Windows Implementation Libraries (WIL)
+   Copyright (c) Microsoft Corporation.
+   Licensed under the MIT License.

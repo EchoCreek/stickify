@@ -1,3 +1,9 @@
+// ------------------------------------------------------------------
+// Original Work Copyright (c) imlinhanchao
+// https://github.com/imlinhanchao/sticky_notes
+// Modified by EchoCreek (2026)
+// Licensed under the Apache License, Version 2.0
+// ------------------------------------------------------------------
 #include "StdAfx.h"
 #include "HotKey.h"
 
@@ -9,45 +15,65 @@ CHotKey::CHotKey(void)
 {
 }
 
-
 CHotKey::~CHotKey(void)
 {
 }
 
-bool CHotKey::SetWithCall( DWORD dwHotKey, HOTKEYCALLBACK pCallback, LPVOID lpParam, HWND hWnd)
+bool CHotKey::SetWithCall(DWORD dwHotKey, HOTKEYCALLBACK pCallback, LPVOID lpParam, HWND hWnd)
 {
+	if (dwHotKey == 0) return false;
 	HOTKEY_CALL hotkeyCall = { pCallback, lpParam };
 	m_HotKeyCallback[dwHotKey] = hotkeyCall;
 	return SetHotKey(dwHotKey, hWnd);
 }
 
-bool CHotKey::RemoveHotKey( DWORD dwHotKey, HWND hWnd )
+bool CHotKey::RemoveHotKey(DWORD dwHotKey, HWND hWnd)
 {
+	if (dwHotKey == 0) return false;
 	if (m_HotKeyCallback.find(dwHotKey) != m_HotKeyCallback.end())
 	{
 		m_HotKeyCallback.erase(dwHotKey);
 	}
-	return UnregisterHotKey(hWnd == NULL ? AfxGetMainWnd()->GetSafeHwnd() : hWnd, dwHotKey);
+	HWND target = (hWnd == NULL && AfxGetMainWnd() != NULL) ? AfxGetMainWnd()->GetSafeHwnd() : hWnd;
+	if (target == NULL) return false;
+	return UnregisterHotKey(target, dwHotKey) != FALSE;
 }
 
-bool CHotKey::SetHotKey( DWORD dwHotKey, HWND hWnd )
+bool CHotKey::SetHotKey(DWORD dwHotKey, HWND hWnd)
 {
-	return RegisterHotKey(hWnd == NULL ? AfxGetMainWnd()->GetSafeHwnd() : hWnd, dwHotKey, GetModifiers(dwHotKey), dwHotKey & 0xff);
+	if (dwHotKey == 0) return false;
+	HWND target = (hWnd == NULL && AfxGetMainWnd() != NULL) ? AfxGetMainWnd()->GetSafeHwnd() : hWnd;
+	if (target == NULL) return false;
+	UINT uMod = GetModifiers(dwHotKey);
+	UINT uVk = dwHotKey & 0xff;
+	BOOL bOk = RegisterHotKey(target, dwHotKey, uMod, uVk);
+	if (!bOk)
+	{
+		CLogApp::Warn(_T("CHotKey::SetHotKey: Failed to register hotkey 0x%08X (mod=0x%X, vk=0x%X) on HWND=0x%p, error=%d"),
+			dwHotKey, uMod, uVk, target, ::GetLastError());
+	}
+	else
+	{
+		CLogApp::Info(_T("CHotKey::SetHotKey: Successfully registered hotkey 0x%08X (mod=0x%X, vk=0x%X) on HWND=0x%p"),
+			dwHotKey, uMod, uVk, target);
+	}
+	return bOk != FALSE;
 }
 
-UINT CHotKey::GetModifiers( DWORD dwHotKey )
+UINT CHotKey::GetModifiers(DWORD dwHotKey)
 {
 	UINT uModifiers = 0;
 	dwHotKey >>= 0x08;
-	if(dwHotKey & HOTKEYF_ALT)		uModifiers |= MOD_ALT;
-	if(dwHotKey & HOTKEYF_SHIFT)	uModifiers |= MOD_SHIFT;
-	if(dwHotKey & HOTKEYF_CONTROL)	uModifiers |= MOD_CONTROL;
-	if(dwHotKey & HOTKEYF_EXT)		uModifiers |= MOD_WIN;
+	if (dwHotKey & HOTKEYF_ALT)     uModifiers |= MOD_ALT;
+	if (dwHotKey & HOTKEYF_SHIFT)   uModifiers |= MOD_SHIFT;
+	if (dwHotKey & HOTKEYF_CONTROL) uModifiers |= MOD_CONTROL;
+	if (dwHotKey & HOTKEYF_EXT)     uModifiers |= MOD_WIN;
 	return uModifiers;
 }
 
-CString CHotKey::GetHotKeyName( DWORD dwHotKey )
+CString CHotKey::GetHotKeyName(DWORD dwHotKey)
 {
+	if (dwHotKey == 0) return _T("");
 	DWORD dwKeyCode = dwHotKey & 0xff;
 	CString sKey = CHotKeyCtrl::GetKeyName(dwKeyCode, IsExtendedKey(dwKeyCode));
 
@@ -61,19 +87,20 @@ CString CHotKey::GetHotKeyName( DWORD dwHotKey )
 		sKey = _T("Win");
 	}
 
-	if(_T(" ") == sKey) 
+	if (_T(" ") == sKey)
 	{
 		sKey = _T("Space");
 	}
-	else if(sKey.IsEmpty())
+	else if (sKey.IsEmpty())
 	{
 		sKey = CHotKeyCtrl::GetKeyName(dwKeyCode, TRUE);
 	}
 
 	dwHotKey >>= 0x08;
-	if(dwHotKey & HOTKEYF_ALT)		sKey = _T("Alt + ") + sKey;
-	if(dwHotKey & HOTKEYF_SHIFT)	sKey = _T("Shift + ") + sKey;
-	if(dwHotKey & HOTKEYF_CONTROL)	sKey = _T("Ctrl + ") + sKey;
+	if (dwHotKey & HOTKEYF_ALT)     sKey = _T("Alt + ") + sKey;
+	if (dwHotKey & HOTKEYF_SHIFT)   sKey = _T("Shift + ") + sKey;
+	if (dwHotKey & HOTKEYF_CONTROL) sKey = _T("Ctrl + ") + sKey;
+	if (dwHotKey & HOTKEYF_EXT)     sKey = _T("Win + ") + sKey;
 
 	return sKey;
 }
@@ -82,7 +109,6 @@ USHORT CHotKey::GetHotKeyCode(CString sHotKey)
 {
 	USHORT uHotKey = 0;
 	if (sHotKey.IsEmpty()) return uHotKey;
-
 	return 0;
 }
 
@@ -94,15 +120,12 @@ bool CHotKey::IsExtendedKey(DWORD vKey)
 		VK_PRIOR,
 		VK_NEXT,
 		VK_END,
-
 		VK_NUMLOCK,
 		VK_INSERT,
-
 		VK_LEFT,
 		VK_UP,
 		VK_RIGHT,
 		VK_DOWN,
-
 		VK_LWIN,
 		VK_RWIN,
 	};
@@ -115,10 +138,10 @@ bool CHotKey::IsExtendedKey(DWORD vKey)
 	return false;
 }
 
-void CHotKey::Execute( DWORD dwHotKey )
+void CHotKey::Execute(DWORD dwHotKey)
 {
-	if (m_HotKeyCallback.find(dwHotKey) != m_HotKeyCallback.end() && m_HotKeyCallback[dwHotKey].callback != NULL) 
-		m_HotKeyCallback[dwHotKey].callback(m_HotKeyCallback[dwHotKey].lpParam); 
+	if (m_HotKeyCallback.find(dwHotKey) != m_HotKeyCallback.end() && m_HotKeyCallback[dwHotKey].callback != NULL)
+		m_HotKeyCallback[dwHotKey].callback(m_HotKeyCallback[dwHotKey].lpParam);
 }
 
 }
