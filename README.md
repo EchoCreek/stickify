@@ -6,7 +6,7 @@
 <p align="center">Windows 桌面便签 · 多维管理工作台</p>
 
 <p align="center">
-  <a href="https://github.com/EchoCreek/sticky_notes/releases"><img src="https://img.shields.io/badge/Release-v1.0.0-2563eb?style=flat-square" alt="Release"></a>
+  <a href="https://github.com/EchoCreek/stickify/releases"><img src="https://img.shields.io/badge/Release-v1.0.0-2563eb?style=flat-square" alt="Release"></a>
   <img src="https://img.shields.io/badge/Windows-10%20%7C%2011%20x64-0078D6?style=flat-square&logo=windows&logoColor=white" alt="Platform">
   <img src="https://img.shields.io/badge/License-Apache%202.0-64748b?style=flat-square" alt="License">
 </p>
@@ -88,7 +88,7 @@ Stickify 是一款 Windows 桌面便签软件。便签窗口常驻桌面，支�
 
 ## 下载
 
-前往 [Releases](https://github.com/EchoCreek/sticky_notes/releases) 下载：
+前往 [Releases](https://github.com/EchoCreek/stickify/releases) 下载：
 
 | 文件 | 说明 |
 | :--- | :--- |

@@ -16,7 +16,7 @@
         <div class="logo-wrapper">
           <img src="/logo.svg" class="logo-img" alt="Logo" />
         </div>
-        <span class="app-name">Sticky Notes</span>
+        <span class="app-name">Stickify</span>
         <span class="app-subtitle">Manager</span>
       </div>
     </div>

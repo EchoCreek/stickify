@@ -4,7 +4,7 @@
 #define MyAppName "Stickify"
 #define MyAppVersion "1.0.0"
 #define MyAppPublisher "EchoCreek & Stickify Contributors"
-#define MyAppURL "https://github.com/EchoCreek/sticky_notes"
+#define MyAppURL "https://github.com/EchoCreek/stickify"
 #define MyAppExeName "Notes.exe"
 
 [Setup]
