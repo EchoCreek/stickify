@@ -97,6 +97,8 @@ Stickify 是一款 Windows 桌面便签软件。便签窗口常驻桌面，支�
 
 **系统要求**：Windows 10 / 11 (x64)，依赖 Microsoft Edge WebView2 Runtime（大多数现代 Windows 已内置）。
 
+> **关于下载与运行提示**：本项目为开源软件，未购买商业代码签名证书。首次下载或运行时若浏览器提示“通常不会下载”或 Windows 弹出拦截窗口，点击“保留”或“更多信息 → 仍要运行”即可正常启动。
+
 ---
 
 ## 本地构建
@@ -144,8 +146,42 @@ MSBuild 编译完成后自动将前端产物与 `Notes.exe` 同步至 `x64\Relea
 
 ---
 
-## 致谢与许可
+## 贡献与致谢
 
-Fork 自 [imlinhanchao/sticky_notes](https://github.com/imlinhanchao/sticky_notes)，遵循 [Apache License 2.0](LICENSE) 开源。
+<table align="center">
+  <tr>
+    <td align="center" width="220">
+      <a href="https://github.com/EchoCreek">
+        <img src="https://github.com/EchoCreek.png?size=120" width="64" height="64" alt="EchoCreek" />
+      </a>
+      <br />
+      <a href="https://github.com/EchoCreek"><b>EchoCreek</b></a>
+      <p><sub>项目维护与架构重构</sub></p>
+      <a href="https://github.com/EchoCreek">
+        <img src="https://img.shields.io/badge/Maintainer-2563eb?style=flat-square" alt="Maintainer" />
+      </a>
+    </td>
+    <td align="center" width="220">
+      <a href="https://deepmind.google/technologies/gemini/">
+        <img src="./docs/assets/gemini-avatar.svg" width="64" height="64" alt="Google Gemini & Antigravity" />
+      </a>
+      <br />
+      <b>Gemini & Antigravity</b>
+      <p><sub>AI 结对架构与工程实现</sub></p>
+      <img src="https://img.shields.io/badge/AI%20Pair-8b5cf6?style=flat-square" alt="AI Pair" />
+    </td>
+    <td align="center" width="220">
+      <a href="https://github.com/imlinhanchao">
+        <img src="https://github.com/imlinhanchao.png?size=120" width="64" height="64" alt="imlinhanchao" />
+      </a>
+      <br />
+      <a href="https://github.com/imlinhanchao"><b>imlinhanchao</b></a>
+      <p><sub>原版项目作者与灵感启发</sub></p>
+      <a href="https://github.com/imlinhanchao/sticky_notes">
+        <img src="https://img.shields.io/badge/Original%20Author-64748b?style=flat-square" alt="Original Author" />
+      </a>
+    </td>
+  </tr>
+</table>
 
-原工程作者：[imlinhanchao](https://github.com/imlinhanchao)。完整版权声明与第三方组件引用见 [NOTICE](NOTICE)。
+本项目遵循 [Apache License 2.0](LICENSE) 开源，完整第三方组件与版权声明见 [NOTICE](NOTICE)。
