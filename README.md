@@ -6,7 +6,7 @@
 <p align="center">Windows 桌面便签 · 多维管理工作台</p>
 
 <p align="center">
-  <a href="https://github.com/EchoCreek/stickify/releases"><img src="https://img.shields.io/badge/Release-v1.0.0-2563eb?style=flat-square" alt="Release"></a>
+  <a href="https://github.com/EchoCreek/stickify/releases"><img src="https://img.shields.io/badge/Release-v1.0.1-2563eb?style=flat-square" alt="Release"></a>
   <img src="https://img.shields.io/badge/Windows-10%20%7C%2011%20x64-0078D6?style=flat-square&logo=windows&logoColor=white" alt="Platform">
   <img src="https://img.shields.io/badge/License-Apache%202.0-64748b?style=flat-square" alt="License">
 </p>
@@ -92,8 +92,8 @@ Stickify 是一款 Windows 桌面便签软件。便签窗口常驻桌面，支�
 
 | 文件 | 说明 |
 | :--- | :--- |
-| `Stickify.1.0.0.x64.portable.zip` | 便携版，解压即用，数据存放在程序目录 |
-| `Stickify.1.0.0.x64.exe` | 安装版，自动建立快捷方式 |
+| `Stickify.1.0.1.x64.portable.zip` | 便携版，解压即用，数据存放在程序目录 |
+| `Stickify.1.0.1.x64.exe` | 安装版，自动建立快捷方式 |
 
 **系统要求**：Windows 10 / 11 (x64)，依赖 Microsoft Edge WebView2 Runtime（大多数现代 Windows 已内置）。
 

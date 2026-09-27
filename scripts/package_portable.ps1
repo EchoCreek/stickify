@@ -2,7 +2,7 @@
 # Stickify — Portable (绿化便携免安装版) 自动化打包脚本
 # ------------------------------------------------------------------
 param(
-    [string]$Version = "1.0.0",
+    [string]$Version = "1.0.1",
     [string]$OutputDir = "output"
 )
 
