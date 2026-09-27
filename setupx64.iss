@@ -36,7 +36,8 @@ Compression=lzma2/ultra64
 SolidCompression=yes
 WizardStyle=modern
 ShowLanguageDialog=yes
-UsePreviousAppDir=yes
+DisableDirPage=no
+UsePreviousAppDir=no
 CloseApplications=yes
 CloseApplicationsFilter=*.exe
 
