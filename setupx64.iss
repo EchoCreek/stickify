@@ -1,6 +1,6 @@
 ; ------------------------------------------------------------------
 ; Stickify 现代化桌面便签 — Inno Setup 6 x64 生产级安装配置脚本
-; 支持：中英双语选择、旧版本检测与覆盖升级、进程运行检测与平滑关闭、
+; 支持：中英双语选择、全方位旧版检测与覆盖升级、进程运行检测与平滑关闭、
 ;       用户数据保护、开机自启、Win+R快速唤起、WebView2运行时检测
 ; ------------------------------------------------------------------
 
@@ -9,10 +9,11 @@
 #define MyAppPublisher "EchoCreek & Stickify Contributors"
 #define MyAppURL "https://github.com/EchoCreek/stickify"
 #define MyAppExeName "Notes.exe"
-#define MyAppId "{{CD1E65B4-0A4C-4853-B4EA-F447CD00B780}"
+#define RawAppId "{CD1E65B4-0A4C-4853-B4EA-F447CD00B780}"
+#define SetupAppId "{" + RawAppId
 
 [Setup]
-AppId={#MyAppId}
+AppId={#SetupAppId}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 AppVerName={#MyAppName} {#MyAppVersion}
@@ -50,8 +51,10 @@ chinesesimplified.AppRunningWarning=检测到 Stickify 正在运行。安装程�
 english.AppRunningWarning=Stickify is currently running. Setup needs to close it to continue.%n%nDo you want Setup to automatically close Stickify and continue?
 chinesesimplified.AppRunningUninstallWarning=检测到 Stickify 正在运行。卸载程序需要先关闭它。%n%n是否自动关闭 Stickify 并继续卸载？
 english.AppRunningUninstallWarning=Stickify is currently running. The uninstaller needs to close it.%n%nDo you want to automatically close Stickify and continue?
-chinesesimplified.ExistingInstallPrompt=检测到系统中已安装 Stickify 旧版本。%n%n版本: %1%n路径: %2%n%n是否覆盖升级现有安装？%n%n点击【是】：自动覆盖并升级到该目录，完整保留您的所有便签与设置（推荐）。%n点击【否】：全新安装，您可以自选新的安装目录。
-english.ExistingInstallPrompt=An existing installation of Stickify was detected.%n%nVersion: %1%nLocation: %2%n%nDo you want to upgrade and overwrite this installation?%n%nClick [Yes]: Overwrite and upgrade to this location, preserving all your notes (Recommended).%nClick [No]: Clean install, allowing you to choose a new location.
+chinesesimplified.ExistingInstallPrompt=检测到系统中已安装 Stickify。%n%n已安装版本: %1%n当前所在路径: %2%n%n是否覆盖升级现有安装？%n%n点击【是】：自动覆盖并升级至该目录，完整保留您的所有便签与设置（推荐）。%n点击【否】：全新安装，您可以自选新的安装目录。
+english.ExistingInstallPrompt=An existing installation of Stickify was detected.%n%nInstalled Version: %1%nInstalled Location: %2%n%nDo you want to upgrade and overwrite this installation?%n%nClick [Yes]: Overwrite and upgrade to this location, preserving all your notes (Recommended).%nClick [No]: Clean install, allowing you to choose a new location.
+chinesesimplified.UpgradeDirLabel=安装程序已检测到旧版本，将在此目录上执行覆盖升级安装：
+english.UpgradeDirLabel=Setup detected an existing installation and will overwrite and upgrade in this directory:
 chinesesimplified.KeepDataQuestion=是否保留您的便签数据和配置？%n%n点击“是”保留所有便签数据与设置（推荐升级/重装时保留）。%n点击“否”彻底清除所有本地数据。
 english.KeepDataQuestion=Do you want to keep your notes data and settings?%n%nClick 'Yes' to preserve all notes and configuration (recommended).%nClick 'No' to remove all local data completely.
 chinesesimplified.WebView2Missing=Stickify 需要 Microsoft Edge WebView2 Runtime 支持。%n%n检测到您的系统可能尚未安装该运行时，是否立即打开微软官方页面下载？
@@ -89,72 +92,143 @@ var
   ExistingDetected: Boolean;
   IsUpgradeMode: Boolean;
 
-// 探测现有安装路径与版本
-function FindExistingInstall(): Boolean;
+// 辅助检测某目录是否包含 Stickify 主程序
+function CheckDirHasNotes(const DirPath: String): Boolean;
+begin
+  Result := (DirPath <> '') and FileExists(AddBackslash(DirPath) + '{#MyAppExeName}');
+end;
+
+// 尝试从指定的注册表键读取安装路径与版本
+function TryGetPathFromKey(RootKey: Integer; const SubKeyName: String; var OutPath, OutVer: String): Boolean;
 var
   PathVal, VerVal: String;
+begin
+  Result := False;
+  OutPath := '';
+  OutVer := '';
+
+  if RegQueryStringValue(RootKey, SubKeyName, 'InstallLocation', PathVal) and (PathVal <> '') then
+  begin
+    OutPath := RemoveQuotes(PathVal);
+    RegQueryStringValue(RootKey, SubKeyName, 'DisplayVersion', VerVal);
+    OutVer := VerVal;
+    if CheckDirHasNotes(OutPath) then
+    begin
+      Result := True;
+      Exit;
+    end;
+  end;
+
+  if RegQueryStringValue(RootKey, SubKeyName, 'Inno Setup: App Path', PathVal) and (PathVal <> '') then
+  begin
+    OutPath := RemoveQuotes(PathVal);
+    RegQueryStringValue(RootKey, SubKeyName, 'DisplayVersion', VerVal);
+    OutVer := VerVal;
+    if CheckDirHasNotes(OutPath) then
+    begin
+      Result := True;
+      Exit;
+    end;
+  end;
+end;
+
+// 全方位地毯式扫描已有安装路径
+function FindExistingInstall(): Boolean;
+var
+  AppIdGuid: String;
   KeyName: String;
+  PathVal: String;
 begin
   Result := False;
   ExistingPath := '';
   ExistingVersion := '';
-  KeyName := 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{#MyAppId}_is1';
+  AppIdGuid := '{#RawAppId}';
+  KeyName := 'Software\Microsoft\Windows\CurrentVersion\Uninstall\' + AppIdGuid + '_is1';
 
-  // 1. 尝试当前用户卸载注册表 (HKCU)
-  if RegQueryStringValue(HKEY_CURRENT_USER, KeyName, 'InstallLocation', PathVal) and (PathVal <> '') then
+  // 1. 当前用户注册表卸载项 (HKCU)
+  if TryGetPathFromKey(HKEY_CURRENT_USER, KeyName, ExistingPath, ExistingVersion) then
   begin
-    RegQueryStringValue(HKEY_CURRENT_USER, KeyName, 'DisplayVersion', VerVal);
-    ExistingPath := RemoveQuotes(PathVal);
-    ExistingVersion := VerVal;
     Result := True;
     Exit;
   end;
 
-  if RegQueryStringValue(HKEY_CURRENT_USER, KeyName, 'Inno Setup: App Path', PathVal) and (PathVal <> '') then
+  // 2. 本地机器 64位注册表卸载项 (HKLM)
+  if TryGetPathFromKey(HKEY_LOCAL_MACHINE, KeyName, ExistingPath, ExistingVersion) then
   begin
-    RegQueryStringValue(HKEY_CURRENT_USER, KeyName, 'DisplayVersion', VerVal);
-    ExistingPath := RemoveQuotes(PathVal);
-    ExistingVersion := VerVal;
     Result := True;
     Exit;
   end;
 
-  // 2. 尝试本地机器卸载注册表 (HKLM)
-  if RegQueryStringValue(HKEY_LOCAL_MACHINE, KeyName, 'InstallLocation', PathVal) and (PathVal <> '') then
+  // 3. 本地机器 32位(WOW6432Node)注册表卸载项 (旧版 32位 安装包遗留)
+  if TryGetPathFromKey(HKEY_LOCAL_MACHINE, 'Software\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\' + AppIdGuid + '_is1', ExistingPath, ExistingVersion) then
   begin
-    RegQueryStringValue(HKEY_LOCAL_MACHINE, KeyName, 'DisplayVersion', VerVal);
-    ExistingPath := RemoveQuotes(PathVal);
-    ExistingVersion := VerVal;
     Result := True;
     Exit;
   end;
 
-  if RegQueryStringValue(HKEY_LOCAL_MACHINE, KeyName, 'Inno Setup: App Path', PathVal) and (PathVal <> '') then
-  begin
-    RegQueryStringValue(HKEY_LOCAL_MACHINE, KeyName, 'DisplayVersion', VerVal);
-    ExistingPath := RemoveQuotes(PathVal);
-    ExistingVersion := VerVal;
-    Result := True;
-    Exit;
-  end;
-
-  // 3. 尝试 App Paths
+  // 4. HKCU App Paths
   if RegQueryStringValue(HKEY_CURRENT_USER, 'Software\Microsoft\Windows\CurrentVersion\App Paths\{#MyAppExeName}', '', PathVal) and (PathVal <> '') then
   begin
-    ExistingPath := ExtractFilePath(RemoveQuotes(PathVal));
+    PathVal := ExtractFilePath(RemoveQuotes(PathVal));
+    if CheckDirHasNotes(PathVal) then
+    begin
+      ExistingPath := PathVal;
+      Result := True;
+      Exit;
+    end;
+  end;
+
+  // 5. HKLM App Paths
+  if RegQueryStringValue(HKEY_LOCAL_MACHINE, 'Software\Microsoft\Windows\CurrentVersion\App Paths\{#MyAppExeName}', '', PathVal) and (PathVal <> '') then
+  begin
+    PathVal := ExtractFilePath(RemoveQuotes(PathVal));
+    if CheckDirHasNotes(PathVal) then
+    begin
+      ExistingPath := PathVal;
+      Result := True;
+      Exit;
+    end;
+  end;
+
+  // 6. 开机启动项 Run
+  if RegQueryStringValue(HKEY_CURRENT_USER, 'Software\Microsoft\Windows\CurrentVersion\Run', 'Sticky Note', PathVal) and (PathVal <> '') then
+  begin
+    PathVal := ExtractFilePath(RemoveQuotes(PathVal));
+    if CheckDirHasNotes(PathVal) then
+    begin
+      ExistingPath := PathVal;
+      Result := True;
+      Exit;
+    end;
+  end;
+
+  // 7. 常见已知物理目录
+  PathVal := ExpandConstant('{localappdata}\Programs\Stickify');
+  if CheckDirHasNotes(PathVal) then
+  begin
+    ExistingPath := PathVal;
     Result := True;
     Exit;
   end;
 
-  if RegQueryStringValue(HKEY_LOCAL_MACHINE, 'Software\Microsoft\Windows\CurrentVersion\App Paths\{#MyAppExeName}', '', PathVal) and (PathVal <> '') then
+  PathVal := ExpandConstant('{autopf}\Stickify');
+  if CheckDirHasNotes(PathVal) then
   begin
-    ExistingPath := ExtractFilePath(RemoveQuotes(PathVal));
+    ExistingPath := PathVal;
+    Result := True;
+    Exit;
+  end;
+
+  PathVal := ExpandConstant('{commonpf32}\Stickify');
+  if CheckDirHasNotes(PathVal) then
+  begin
+    ExistingPath := PathVal;
     Result := True;
     Exit;
   end;
 end;
 
-// 动态决定默认安装路径：若用户确认覆盖升级，则定位至现有路径，否则推荐原生路径
+// 动态决定默认安装路径
 function GetDefaultInstallDir(Param: String): String;
 begin
   if IsUpgradeMode and (ExistingPath <> '') then
@@ -190,19 +264,16 @@ var
   Version: String;
 begin
   Result := False;
-  // 检查 64位 HKLM
   if RegQueryStringValue(HKEY_LOCAL_MACHINE, 'SOFTWARE\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}', 'pv', Version) and (Version <> '') and (Version <> '0.0.0.0') then
   begin
     Result := True;
     Exit;
   end;
-  // 检查 WOW6432Node HKLM
   if RegQueryStringValue(HKEY_LOCAL_MACHINE, 'SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}', 'pv', Version) and (Version <> '') and (Version <> '0.0.0.0') then
   begin
     Result := True;
     Exit;
   end;
-  // 检查 HKCU 用户级安装
   if RegQueryStringValue(HKEY_CURRENT_USER, 'Software\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}', 'pv', Version) and (Version <> '') and (Version <> '0.0.0.0') then
   begin
     Result := True;
@@ -224,17 +295,27 @@ begin
     Exit;
   end;
 
-  // 2. 探测是否存在旧版安装路径，并弹窗提示用户选择是否覆盖升级
+  // 2. 探测旧版安装路径，并弹窗提示用户选择是否覆盖升级
   ExistingDetected := FindExistingInstall();
   if ExistingDetected and (ExistingPath <> '') then
   begin
     if ExistingVersion = '' then
-      ExistingVersion := 'Unknown';
+      ExistingVersion := '1.0.0';
     PromptMsg := FmtMessage(CustomMessage('ExistingInstallPrompt'), [ExistingVersion, ExistingPath]);
     if MsgBox(PromptMsg, mbConfirmation, MB_YESNO) = IDYES then
     begin
       IsUpgradeMode := True;
     end;
+  end;
+end;
+
+procedure InitializeWizard();
+begin
+  // 如果确认是覆盖升级，在向导的目录选择框直接填入该已有路径
+  if IsUpgradeMode and (ExistingPath <> '') then
+  begin
+    WizardForm.DirEdit.Text := ExistingPath;
+    WizardForm.SelectDirLabel.Caption := CustomMessage('UpgradeDirLabel');
   end;
 end;
 
@@ -266,7 +347,6 @@ begin
     // 询问用户是否保留便签数据
     if MsgBox(CustomMessage('KeepDataQuestion'), mbConfirmation, MB_YESNO) = IDNO then
     begin
-      // 用户选择彻底清除
       DelTree(ExpandConstant('{app}\notes'), True, True, True);
       DelTree(ExpandConstant('{app}\data'), True, True, True);
       DelTree(ExpandConstant('{app}\{#MyAppExeName}.WebView2'), True, True, True);
