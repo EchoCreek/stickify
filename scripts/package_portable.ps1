@@ -30,6 +30,9 @@ Copy-Item "x64\Release\Notes.exe" $stageDir
 Copy-Item "x64\Release\WebView2Loader.dll" $stageDir
 if (Test-Path "LICENSE") { Copy-Item "LICENSE" $stageDir }
 
+# 4. 生成便携版标记文件 (用于区分安装版与便携版，实现独立互斥锁与自包含存储)
+New-Item -ItemType File -Path (Join-Path $stageDir "portable") -Force | Out-Null
+
 # 4. 复制三大前端主题纯净 dist 产物
 Copy-Item -Recurse "themes\default\dist" (Join-Path $stageDir "themes\Default")
 Copy-Item -Recurse "themes\simple\dist" (Join-Path $stageDir "themes\Simple")

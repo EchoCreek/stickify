@@ -27,7 +27,10 @@ public:
 	static bool IsWow64();
 	static MODULE_VER GetVersion(CString sModuleName);
 	static void SetAutoRun(bool bAuto);
-	static HANDLE ProgramLock(CString sInstanceName);
+	static bool IsPortableMode();
+	static CString GetAppInstanceMutexName();
+	static UINT GetWakeupMessageId();
+	static HANDLE ProgramLock(CString sInstanceName = _T(""));
 };
 
 }

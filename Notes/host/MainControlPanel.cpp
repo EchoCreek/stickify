@@ -1,4 +1,4 @@
-// ------------------------------------------------------------------
+﻿// ------------------------------------------------------------------
 // Copyright (c) Sticky Notes Refactoring Team (2026)
 // Part of Sticky Notes Refactoring Project
 // Licensed under the Apache License, Version 2.0
@@ -112,7 +112,7 @@ BOOL MainControlPanel::OnInitDialog()
 	SetIcon(m_hIcon, TRUE);
 	SetIcon(m_hIcon, FALSE);
 
-	m_Instance = Easy::Utility::ProgramLock(_T("HANCEL_STICKY_NOTES_APP"));
+	m_Instance = Easy::Utility::ProgramLock();
 	if (m_Instance == nullptr)
 	{
 		return FALSE;
@@ -543,4 +543,26 @@ void MainControlPanel::OnManager()
 {
 	CLogApp::Write(_T("MainControlPanel::OnManager() triggered"));
 	m_manager.ShowManager();
+}
+
+LRESULT MainControlPanel::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
+{
+	static const UINT s_uWakeupMsg = Easy::Utility::GetWakeupMessageId();
+	if (message != 0 && message == s_uWakeupMsg)
+	{
+		CLogApp::Info(_T("MainControlPanel: Received wakeup broadcast from duplicate instance"));
+		// 1. 将所有便签恢复显示并置顶聚焦
+		m_manager.SetVisible(true);
+		m_manager.FocusFirstNote();
+
+		// 2. 托盘气泡反馈
+		m_nid.uFlags |= NIF_INFO;
+		_tcsncpy_s(m_nid.szInfo, _T("Stickify 正在后台运行"), _TRUNCATE);
+		_tcsncpy_s(m_nid.szInfoTitle, _T("Stickify"), _TRUNCATE);
+		m_nid.dwInfoFlags = NIIF_INFO;
+		Shell_NotifyIcon(NIM_MODIFY, &m_nid);
+		m_nid.uFlags &= ~NIF_INFO;
+		return 0;
+	}
+	return CDialogEx::WindowProc(message, wParam, lParam);
 }

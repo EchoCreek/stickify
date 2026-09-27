@@ -114,13 +114,47 @@ void Utility::SetAutoRun(bool bAuto)
 	else reg.DeleteValue(AUTO_REG, _T("Sticky Note"));
 }
 
+bool Utility::IsPortableMode()
+{
+	CString sMarker = Path::GetCurDirectory(_T("portable"));
+	CString sMarkerDat = Path::GetCurDirectory(_T("portable.dat"));
+	return (::GetFileAttributes(sMarker) != INVALID_FILE_ATTRIBUTES) ||
+	       (::GetFileAttributes(sMarkerDat) != INVALID_FILE_ATTRIBUTES);
+}
+
+CString Utility::GetAppInstanceMutexName()
+{
+	if (IsPortableMode())
+	{
+		CString sExePath = Path::GetProgramPath();
+		sExePath.MakeLower();
+		unsigned long hash = 5381;
+		for (int i = 0; i < sExePath.GetLength(); ++i)
+		{
+			hash = ((hash << 5) + hash) + static_cast<unsigned long>(sExePath[i]);
+		}
+		CString sMutex;
+		sMutex.Format(_T("STICKIFY_PORTABLE_%08lX"), hash);
+		return sMutex;
+	}
+	return _T("STICKIFY_INSTALLED_APP_MUTEX");
+}
+
+UINT Utility::GetWakeupMessageId()
+{
+	static UINT s_uWakeupMsg = ::RegisterWindowMessage(_T("STICKIFY_INSTANCE_WAKEUP_MSG"));
+	return s_uWakeupMsg;
+}
+
 HANDLE Utility::ProgramLock(CString sInstanceName)
 {
-	if (sInstanceName.IsEmpty()) sInstanceName = _T("STICKY_NOTES_APP_MUTEX_SINGLETON");
+	if (sInstanceName.IsEmpty()) sInstanceName = GetAppInstanceMutexName();
 	HANDLE hInstance = CreateMutex(NULL, TRUE, sInstanceName.GetString());
 	if (GetLastError() == ERROR_ALREADY_EXISTS)
 	{
 		CloseHandle(hInstance);
+		// 广播通知已有实例置顶并唤醒
+		::PostMessage(HWND_BROADCAST, GetWakeupMessageId(), 0, 0);
 		::PostQuitMessage(0);
 		return nullptr;
 	}

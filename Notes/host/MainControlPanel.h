@@ -1,4 +1,4 @@
-// ------------------------------------------------------------------
+﻿// ------------------------------------------------------------------
 // Copyright (c) Sticky Notes Refactoring Team (2026)
 // Part of Sticky Notes Refactoring Project
 // Licensed under the Apache License, Version 2.0
@@ -46,6 +46,9 @@ protected:
 	afx_msg void OnMenuThroughAllOn();
 	afx_msg void OnMenuThroughAllOff();
 	afx_msg void OnManager();
+
+protected:
+	virtual LRESULT WindowProc(UINT message, WPARAM wParam, LPARAM lParam) override;
 
 	DECLARE_MESSAGE_MAP()
 
