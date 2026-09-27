@@ -121,6 +121,7 @@ HANDLE Utility::ProgramLock(CString sInstanceName)
 	if (GetLastError() == ERROR_ALREADY_EXISTS)
 	{
 		CloseHandle(hInstance);
+		::PostQuitMessage(0);
 		return nullptr;
 	}
 	return hInstance;

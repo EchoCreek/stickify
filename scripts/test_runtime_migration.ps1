@@ -54,16 +54,18 @@ Write-Host "================================================================" -F
 $baseDir = Split-Path -Parent $PSScriptRoot
 $releaseDir = Join-Path $baseDir "x64\Release"
 $notesExe = Join-Path $releaseDir "Notes.exe"
+$testExe = Join-Path $releaseDir "NotesM.exe"
 $notesDir = Join-Path $releaseDir "notes"
 $dbFile = Join-Path $notesDir "notes.db"
 $backupDir = Join-Path $notesDir "json_backup"
 
-# Ensure any existing Notes.exe is closed
-Stop-Process -Name "Notes" -Force -ErrorAction SilentlyContinue
+# Ensure test binary exists and any existing test instance NotesM.exe is closed
+Copy-Item $notesExe $testExe -Force
+Stop-Process -Name "NotesM" -Force -ErrorAction SilentlyContinue
 Start-Sleep -Milliseconds 500
 
-Write-Host "`n[Step 1] Starting Notes.exe to trigger automatic migration..." -ForegroundColor Yellow
-$proc = Start-Process -FilePath $notesExe -PassThru
+Write-Host "`n[Step 1] Starting NotesM.exe to trigger automatic migration..." -ForegroundColor Yellow
+$proc = Start-Process -FilePath $testExe -PassThru
 
 # Monitor for Migration Confirmation Dialog and auto-confirm via Win32 SendMessage
 for ($i = 0; $i -lt 25; $i++) {
@@ -112,10 +114,11 @@ if (-not $proc.HasExited) {
     Write-Host "  [FAIL] Notes.exe exited prematurely!" -ForegroundColor Red
 }
 
-Write-Host "`n[Step 4] Clean shutdown of Notes.exe..." -ForegroundColor Yellow
+Write-Host "`n[Step 4] Clean shutdown of NotesM.exe..." -ForegroundColor Yellow
 Stop-Process -Id $proc.Id -Force
 Start-Sleep -Milliseconds 500
-Write-Host "  -> Notes.exe stopped." -ForegroundColor Green
+Remove-Item $testExe -Force -ErrorAction SilentlyContinue
+Write-Host "  -> NotesM.exe stopped and cleaned up." -ForegroundColor Green
 
 Write-Host "`n================================================================" -ForegroundColor Cyan
 Write-Host "   LIVE RUNTIME MIGRATION VERIFICATION COMPLETE!" -ForegroundColor Cyan

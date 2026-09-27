@@ -63,7 +63,12 @@ _ReSharper*/
 *.WebView2/
 EBWebView/
 data/
-notes/
+/notes/
+!/Notes/
+!/Notes/**
+Notes/x64/
+Notes/Notes/
+Notes/ipch/
 *.db
 *.db-shm
 *.db-wal

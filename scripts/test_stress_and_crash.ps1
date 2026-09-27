@@ -10,14 +10,16 @@ Write-Host "================================================================" -F
 $baseDir = Split-Path -Parent $PSScriptRoot
 $releaseDir = Join-Path $baseDir "x64\Release"
 $notesExe = Join-Path $releaseDir "Notes.exe"
+$testExe = Join-Path $releaseDir "NotesM.exe"
 $notesStorage = Join-Path $releaseDir "notes"
 
 if (-not (Test-Path $notesStorage)) {
     New-Item -ItemType Directory -Path $notesStorage -Force | Out-Null
 }
 
-# Ensure existing notes processes are terminated
-Stop-Process -Name "Notes" -Force -ErrorAction SilentlyContinue
+# Ensure test binary exists and any existing test instance NotesM is terminated
+Copy-Item $notesExe $testExe -Force
+Stop-Process -Name "NotesM" -Force -ErrorAction SilentlyContinue
 Start-Sleep -Milliseconds 500
 
 # Test 1: Generate 25 high-density notes with special characters and large lists
@@ -55,9 +57,9 @@ for ($i = 1; $i -le 25; $i++) {
 }
 Write-Host "  -> Successfully generated 25 notes containing 500 total checklist items." -ForegroundColor Green
 
-# Test 2: Launch Notes.exe and monitor resource usage
-Write-Host "`n[E2E 2] Launching Notes.exe with 25 concurrent notes loaded..." -ForegroundColor Yellow
-$proc = Start-Process -FilePath $notesExe -PassThru
+# Test 2: Launch NotesM.exe and monitor resource usage
+Write-Host "`n[E2E 2] Launching NotesM.exe with 25 concurrent notes loaded..." -ForegroundColor Yellow
+$proc = Start-Process -FilePath $testExe -PassThru
 Start-Sleep -Seconds 5
 
 $proc.Refresh()
@@ -102,24 +104,24 @@ if ($corruptedCount -eq 0 -and $files.Count -eq 25) {
 }
 
 # Test 5: Re-launch after Crash
-Write-Host "`n[E2E 5] Re-launching Notes.exe after crash..." -ForegroundColor Yellow
-$proc2 = Start-Process -FilePath $notesExe -PassThru
+Write-Host "`n[E2E 5] Re-launching NotesM.exe after crash..." -ForegroundColor Yellow
+$proc2 = Start-Process -FilePath $testExe -PassThru
 Start-Sleep -Seconds 4
 
 if (-not $proc2.HasExited) {
-    Write-Host "  [PASS] Notes.exe successfully re-launched and stabilized after sudden termination." -ForegroundColor Green
+    Write-Host "  [PASS] NotesM.exe successfully re-launched and stabilized after sudden termination." -ForegroundColor Green
 } else {
-    Write-Host "  [FAIL] Notes.exe crashed on re-launch." -ForegroundColor Red
+    Write-Host "  [FAIL] NotesM.exe crashed on re-launch." -ForegroundColor Red
 }
 
 # Cleanup stress test files
 Write-Host "`n[CLEANUP] Cleaning up stress test files..." -ForegroundColor Yellow
 Get-ChildItem -Path $notesStorage -Filter "stress_note_*.json" | Remove-Item -Force
-Stop-Process -Name "Notes" -Force -ErrorAction SilentlyContinue
+Stop-Process -Id $proc2.Id -Force -ErrorAction SilentlyContinue
+Stop-Process -Name "NotesM" -Force -ErrorAction SilentlyContinue
 Start-Sleep -Milliseconds 500
-
-# Relaunch normal single note
-Invoke-CimMethod -ClassName Win32_Process -MethodName Create -Arguments @{CommandLine = $notesExe} | Out-Null
+Remove-Item $testExe -Force -ErrorAction SilentlyContinue
+Write-Host "  -> NotesM.exe test instance cleaned up." -ForegroundColor Green
 
 Write-Host "================================================================" -ForegroundColor Cyan
 Write-Host "   E2E STRESS & CRASH RECOVERY TESTS COMPLETED SUCCESSFULLY! " -ForegroundColor Cyan
