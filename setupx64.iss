@@ -1,6 +1,7 @@
 ; ------------------------------------------------------------------
 ; Stickify 现代化桌面便签 — Inno Setup 6 x64 生产级安装配置脚本
-; 支持：中英双语选择、运行检测与平滑关闭、覆盖安装、用户数据保护、开机自启、Win+R快速唤起
+; 支持：中英双语选择、旧版本检测与覆盖升级、进程运行检测与平滑关闭、
+;       用户数据保护、开机自启、Win+R快速唤起、WebView2运行时检测
 ; ------------------------------------------------------------------
 
 #define MyAppName "Stickify"
@@ -8,9 +9,10 @@
 #define MyAppPublisher "EchoCreek & Stickify Contributors"
 #define MyAppURL "https://github.com/EchoCreek/stickify"
 #define MyAppExeName "Notes.exe"
+#define MyAppId "{{CD1E65B4-0A4C-4853-B4EA-F447CD00B780}"
 
 [Setup]
-AppId={{CD1E65B4-0A4C-4853-B4EA-F447CD00B780}
+AppId={#MyAppId}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 AppVerName={#MyAppName} {#MyAppVersion}
@@ -18,7 +20,7 @@ AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}
 AppUpdatesURL={#MyAppURL}
-DefaultDirName={autopf}\{#MyAppName}
+DefaultDirName={code:GetDefaultInstallDir}
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 DisableProgramGroupPage=yes
@@ -48,6 +50,8 @@ chinesesimplified.AppRunningWarning=检测到 Stickify 正在运行。安装程�
 english.AppRunningWarning=Stickify is currently running. Setup needs to close it to continue.%n%nDo you want Setup to automatically close Stickify and continue?
 chinesesimplified.AppRunningUninstallWarning=检测到 Stickify 正在运行。卸载程序需要先关闭它。%n%n是否自动关闭 Stickify 并继续卸载？
 english.AppRunningUninstallWarning=Stickify is currently running. The uninstaller needs to close it.%n%nDo you want to automatically close Stickify and continue?
+chinesesimplified.ExistingInstallPrompt=检测到系统中已安装 Stickify 旧版本。%n%n版本: %1%n路径: %2%n%n是否覆盖升级现有安装？%n%n点击【是】：自动覆盖并升级到该目录，完整保留您的所有便签与设置（推荐）。%n点击【否】：全新安装，您可以自选新的安装目录。
+english.ExistingInstallPrompt=An existing installation of Stickify was detected.%n%nVersion: %1%nLocation: %2%n%nDo you want to upgrade and overwrite this installation?%n%nClick [Yes]: Overwrite and upgrade to this location, preserving all your notes (Recommended).%nClick [No]: Clean install, allowing you to choose a new location.
 chinesesimplified.KeepDataQuestion=是否保留您的便签数据和配置？%n%n点击“是”保留所有便签数据与设置（推荐升级/重装时保留）。%n点击“否”彻底清除所有本地数据。
 english.KeepDataQuestion=Do you want to keep your notes data and settings?%n%nClick 'Yes' to preserve all notes and configuration (recommended).%nClick 'No' to remove all local data completely.
 chinesesimplified.WebView2Missing=Stickify 需要 Microsoft Edge WebView2 Runtime 支持。%n%n检测到您的系统可能尚未安装该运行时，是否立即打开微软官方页面下载？
@@ -79,6 +83,86 @@ Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: de
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
 
 [Code]
+var
+  ExistingPath: String;
+  ExistingVersion: String;
+  ExistingDetected: Boolean;
+  IsUpgradeMode: Boolean;
+
+// 探测现有安装路径与版本
+function FindExistingInstall(): Boolean;
+var
+  PathVal, VerVal: String;
+  KeyName: String;
+begin
+  Result := False;
+  ExistingPath := '';
+  ExistingVersion := '';
+  KeyName := 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{#MyAppId}_is1';
+
+  // 1. 尝试当前用户卸载注册表 (HKCU)
+  if RegQueryStringValue(HKEY_CURRENT_USER, KeyName, 'InstallLocation', PathVal) and (PathVal <> '') then
+  begin
+    RegQueryStringValue(HKEY_CURRENT_USER, KeyName, 'DisplayVersion', VerVal);
+    ExistingPath := RemoveQuotes(PathVal);
+    ExistingVersion := VerVal;
+    Result := True;
+    Exit;
+  end;
+
+  if RegQueryStringValue(HKEY_CURRENT_USER, KeyName, 'Inno Setup: App Path', PathVal) and (PathVal <> '') then
+  begin
+    RegQueryStringValue(HKEY_CURRENT_USER, KeyName, 'DisplayVersion', VerVal);
+    ExistingPath := RemoveQuotes(PathVal);
+    ExistingVersion := VerVal;
+    Result := True;
+    Exit;
+  end;
+
+  // 2. 尝试本地机器卸载注册表 (HKLM)
+  if RegQueryStringValue(HKEY_LOCAL_MACHINE, KeyName, 'InstallLocation', PathVal) and (PathVal <> '') then
+  begin
+    RegQueryStringValue(HKEY_LOCAL_MACHINE, KeyName, 'DisplayVersion', VerVal);
+    ExistingPath := RemoveQuotes(PathVal);
+    ExistingVersion := VerVal;
+    Result := True;
+    Exit;
+  end;
+
+  if RegQueryStringValue(HKEY_LOCAL_MACHINE, KeyName, 'Inno Setup: App Path', PathVal) and (PathVal <> '') then
+  begin
+    RegQueryStringValue(HKEY_LOCAL_MACHINE, KeyName, 'DisplayVersion', VerVal);
+    ExistingPath := RemoveQuotes(PathVal);
+    ExistingVersion := VerVal;
+    Result := True;
+    Exit;
+  end;
+
+  // 3. 尝试 App Paths
+  if RegQueryStringValue(HKEY_CURRENT_USER, 'Software\Microsoft\Windows\CurrentVersion\App Paths\{#MyAppExeName}', '', PathVal) and (PathVal <> '') then
+  begin
+    ExistingPath := ExtractFilePath(RemoveQuotes(PathVal));
+    Result := True;
+    Exit;
+  end;
+
+  if RegQueryStringValue(HKEY_LOCAL_MACHINE, 'Software\Microsoft\Windows\CurrentVersion\App Paths\{#MyAppExeName}', '', PathVal) and (PathVal <> '') then
+  begin
+    ExistingPath := ExtractFilePath(RemoveQuotes(PathVal));
+    Result := True;
+    Exit;
+  end;
+end;
+
+// 动态决定默认安装路径：若用户确认覆盖升级，则定位至现有路径，否则推荐原生路径
+function GetDefaultInstallDir(Param: String): String;
+begin
+  if IsUpgradeMode and (ExistingPath <> '') then
+    Result := ExistingPath
+  else
+    Result := ExpandConstant('{autopf}\{#MyAppName}');
+end;
+
 // 关闭正在运行的 Stickify 进程
 function CloseRunningStickify(const WarnMsg: String): Boolean;
 var
@@ -127,8 +211,31 @@ begin
 end;
 
 function InitializeSetup(): Boolean;
+var
+  PromptMsg: String;
 begin
-  Result := CloseRunningStickify(CustomMessage('AppRunningWarning'));
+  Result := True;
+  IsUpgradeMode := False;
+
+  // 1. 若旧实例正在运行，先友好提示并关闭
+  if not CloseRunningStickify(CustomMessage('AppRunningWarning')) then
+  begin
+    Result := False;
+    Exit;
+  end;
+
+  // 2. 探测是否存在旧版安装路径，并弹窗提示用户选择是否覆盖升级
+  ExistingDetected := FindExistingInstall();
+  if ExistingDetected and (ExistingPath <> '') then
+  begin
+    if ExistingVersion = '' then
+      ExistingVersion := 'Unknown';
+    PromptMsg := FmtMessage(CustomMessage('ExistingInstallPrompt'), [ExistingVersion, ExistingPath]);
+    if MsgBox(PromptMsg, mbConfirmation, MB_YESNO) = IDYES then
+    begin
+      IsUpgradeMode := True;
+    end;
+  end;
 end;
 
 procedure CurStepChanged(CurStep: TSetupStep);
